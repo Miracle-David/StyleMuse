@@ -25,6 +25,8 @@ export default function HomePage() {
   const [allOutfits, setAllOutfits] = useState<Outfit[]>([]);
   const [aiInput, setAiInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedOccasion, setSelectedOccasion] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
     fetchOutfits();
@@ -46,6 +48,12 @@ export default function HomePage() {
     if (all) setAllOutfits(all);
     setLoading(false);
   }
+
+  const filteredGalleryOutfits = allOutfits.filter((outfit) => {
+    if (selectedOccasion && outfit.occasion !== selectedOccasion) return false;
+    if (selectedCategory && outfit.category !== selectedCategory) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen">
@@ -134,14 +142,23 @@ export default function HomePage() {
             </div>
 
             <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Summer Party', 'Office Chic', 'Street Style', 'Date Night'].map((style) => (
+              {[
+                { label: 'Summer Party', occasion: 'party', category: 'minimal_luxe' },
+                { label: 'Office Chic', occasion: 'work', category: 'minimal_luxe' },
+                { label: 'Street Style', occasion: 'casual', category: 'streetwear' },
+                { label: 'Date Night', occasion: 'party', category: 'minimal_luxe' },
+              ].map((style) => (
                 <Button
-                  key={style}
+                  key={style.label}
                   variant="outline"
                   className="w-full"
-                  onClick={() => setAiInput(style + ' Outfit')}
+                  onClick={() => {
+                    setSelectedOccasion(style.occasion);
+                    setSelectedCategory(style.category);
+                    document.getElementById('gallery-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                 >
-                  {style}
+                  {style.label}
                 </Button>
               ))}
             </div>
@@ -149,7 +166,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <section id="gallery-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 scroll-smooth">
         <div className="flex items-center justify-between mb-12">
           <div>
             <h2 className="text-4xl md:text-5xl font-bold mb-2">Style Gallery</h2>
@@ -158,12 +175,66 @@ export default function HomePage() {
         </div>
 
         <div className="flex gap-3 mb-8 overflow-x-auto pb-4">
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">All</Badge>
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">Minimal Luxe</Badge>
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">Streetwear</Badge>
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">Sustainable</Badge>
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">Summer</Badge>
-          <Badge variant="outline" className="cursor-pointer whitespace-nowrap px-4 py-2">Party</Badge>
+          <Badge
+            variant={!selectedOccasion && !selectedCategory ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedOccasion('');
+              setSelectedCategory('');
+            }}
+          >
+            All
+          </Badge>
+          <Badge
+            variant={selectedCategory === 'minimal_luxe' && !selectedOccasion ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedCategory('minimal_luxe');
+              setSelectedOccasion('');
+            }}
+          >
+            Minimal Luxe
+          </Badge>
+          <Badge
+            variant={selectedCategory === 'streetwear' && !selectedOccasion ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedCategory('streetwear');
+              setSelectedOccasion('');
+            }}
+          >
+            Streetwear
+          </Badge>
+          <Badge
+            variant={selectedCategory === 'sustainable' && !selectedOccasion ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedCategory('sustainable');
+              setSelectedOccasion('');
+            }}
+          >
+            Sustainable
+          </Badge>
+          <Badge
+            variant={selectedOccasion === 'party' && !selectedCategory ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedOccasion('party');
+              setSelectedCategory('');
+            }}
+          >
+            Party
+          </Badge>
+          <Badge
+            variant={selectedOccasion === 'casual' && !selectedCategory ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-2"
+            onClick={() => {
+              setSelectedOccasion('casual');
+              setSelectedCategory('');
+            }}
+          >
+            Casual
+          </Badge>
         </div>
 
         {loading ? (
@@ -174,9 +245,15 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="masonry-grid">
-            {allOutfits.map((outfit) => (
-              <OutfitCard key={outfit.id} outfit={outfit} />
-            ))}
+            {filteredGalleryOutfits.length > 0 ? (
+              filteredGalleryOutfits.map((outfit) => (
+                <OutfitCard key={outfit.id} outfit={outfit} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                <p className="text-lg">No looks found for this style. Try another filter!</p>
+              </div>
+            )}
           </div>
         )}
       </section>
